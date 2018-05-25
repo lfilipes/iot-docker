@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tb
+  labels:
+    run: tb
+spec:
+  containers: 
+    - name: thingsboard
+      image: gcr.io/iot-docker/thingsboard:1.4.0
+      ports:
+        - containerPort: 2880
+        - containerPort: 8080
+        - containerPort: 5683
+        - containerPort: 9001 
+      env:
+        - name: MQTT_BIND_ADDRESS
+          value: "0.0.0.0"
+        - name: MQTT_BIND_PORT
+          value: "2883"
+        - name: COAP_BIND_ADDRESS
+          value: "0.0.0.0"
+        - name: COAP_BIND_PORT
+          value: "5683"
+        - name: DATABASE_TYPE
+          value: "sql"
+        - name: POSTGRES_DB
+          value: "thingsboard"
+        - name: ADD_SCHEMA_AND_SYSTEM_DATA
+          value: "true"
+        - name: ADD_DEMO_DATA
+          value: "true"
+        - name: POSTGRES_HOST
+          value: "localhost"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_DB
+          value: "thingsboard"
+        - name: SPRING_JPA_DATABASE_PLATFORM
+          value: "org.hibernate.dialect.PostgreSQLDialect"
+        - name: SPRING_DRIVER_CLASS_NAME
+          value: "org.postgresql.Driver"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://localhost:5432/thingsboard"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "postgres"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "postgres"
+      command:
+        - sh
+        - -c
+        - /run-application.sh
+    - name: postgres
+      image: gcr.io/iot-docker/postgresql:9.6
+      env:
+        - name: DB_PASS
+          value: postgres
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+      ports:
+        - containerPort: 5432
+      volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: pg-data
+  volumes:
+    - name: pg-data
+      persistentVolumeClaim:
+          claimName: pg-data-claim

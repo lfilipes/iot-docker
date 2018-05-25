@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  generateName: mosquitto-gw-service
+  labels:
+    app: mosquitto-gateway
+  name: mosquitto-gw-service
+  namespace: default
+spec:
+  ports:
+  - name: 1883-to-1883-tcp
+    port: 1883
+    protocol: TCP
+    targetPort: 1883
+  - name: 9090-to-9090-tcp
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    app: mosquitto-gateway
+  sessionAffinity: None
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mosquitto-gateway
+  labels:
+    app: mosquitto-gateway
+spec:
+  containers:
+    - name: mosquitto-gateway
+      image: gcr.io/iot-docker/mosquitto-gateway:latest
+      ports:
+        - containerPort: 1883
+        - containerPort: 9090
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "/etc/init.d/mosquitto restart; /etc/init.d/tb-gateway restart; while true; do sleep 30; done;" ]
